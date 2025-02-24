@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Hitung Diskon</title>
+    <link rel="shortcut icon" href="./assets/icon.png" type="image/x-icon">
+    <link rel="stylesheet" href="./assets/style.css">
+    <!-- libarary untuk inputan agar bisa format rupiah -->
+    <script src="./assets/autoNumeric.js"></script>
+    <!-- validation style  -->
+    <style>
+        .error-message {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+    <script src="./assets/jquery-3.7.1.min.js"></script>
+    <script src="./assets/parsley.min.js"></script>
+</head>
+
+<body>
+    <section>
+        <div class="wrapper">
+            <h1>Aplikasi Diskon</h1>
+            <div class="container">
+                <div class="form">
+                    <h2 class="">Minimarket jarwo</h2>
+                    <form id="jarwoform">
+                        <div class="inputBox">
+                            <input type="text" id="harga_barang" placeholder="Rp. 1xx xxx" 
+                                data-parsley-trigger="focusin" 
+                                data-parsley-required
+                                data-parsley-min-custom
+                                data-parsley-min-custom-message="Harga Barang minimal 1 Rupiah"
+                                data-parsley-required-message="harga barang harus ada!"
+                                data-parsley-type-message="masukan harga yang benar Rp. 100 xxx">
+                        </div>
+                        <div class="inputBox">
+                            <input type="text" id="diskon" 
+                                placeholder="Diskon 50%" 
+                                data-parsley-trigger="focusin"
+                                data-parsley-max="100" 
+                                data-parsley-min="1"
+                                data-parsley-required
+                                data-parsley-required-message="diskon harus diisi"
+                                data-parsley-type-message="masukan diskon yang benar!"
+                                data-parsley-min-message="diskon minimal 1%"
+                                data-parsley-max-message="diskon maksimal 100%">
+                        </div>
+                        <div class="inputBox">
+                            <button id="button" type="submit">Hitung</button>
+                        </div>
+    
+                        <p class="forget harga-barang">Harga Barang : - </p>
+                        <p class="forget diskon-barang">Diskon : - </p>
+                        <p class="forget potongan-harga">Potongan : -</p>
+                        <p class="forget">Total Harga : <span id="total_harga">_______</span></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <script>
+        window.parsley.addValidator("minCustom", {
+            /**
+            * @param {string} text
+            */
+            validateString: (text) => {
+                //  debugging 
+                // console.log(text)
+
+                if(text.startsWith("-Rp")) {
+                    return false
+                } else if(text == "Rp 0"){
+                    return false
+                }
+                return true
+            },
+        })
+
+        $(document).ready(() => {
+
+            //animation
+            $("h1").addClass("focus-in-expand")
+            $(".container").addClass("flip-in-diag-2-br ")
+
+            // mengambil element yang diperlukan 
+            const form = $('#jarwoform')
+            const hargaBarang = new AutoNumeric("#harga_barang", {
+                digitGroupSeparator: '.',
+                decimalCharacter: ',',
+                decimalPlaces: 0,
+                currencySymbol: 'Rp ',
+                currencySymbolPlacement: 'p'
+            })
+
+
+            // untuk membuat validasi error
+            let validation = form.parsley({
+                errorsContainer: function (field) {
+                    return field.$element.closest('.inputBox');
+                },
+                errorsWrapper: '<div class="error-message"></div>',
+                errorTemplate: '<span></span>',
+            });
+
+            // ketika tombol hitung dipencet 
+            form.on("submit", (e) => {
+                e.preventDefault()
+
+                let harga_barang = parseInt(hargaBarang.getNumber());
+                let diskon = parseFloat($("#diskon").val());
+
+                // jika validasi benar maka 
+                if (validation.isValid()) {
+
+
+                    // menghitung harga yang harus dibayar 
+                    let potongan = harga_barang * (diskon / 100)
+                    let total = harga_barang - potongan;
+
+
+                    console.log(potongan)
+                    // ditampilkan
+                    $(".harga-barang").text(`Harga Barang : ${formatCurrency(harga_barang)}`)
+                    $(".diskon-barang").text(`Diskon : ${diskon}%`)
+                    $(".potongan-harga").text(`Potongan : ${formatCurrency(potongan)}`)
+                    let total_harga = $("#total_harga").text(formatCurrency(total));
+
+                }
+            });
+
+        });
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0, maximumFractionDigit: 0 }).format(parseInt(value))
+        }
+    </script>
+</body>
+
+</html>
